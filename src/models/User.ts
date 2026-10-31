@@ -12,6 +12,7 @@ export interface IUser extends Document {
   role: UserRole;
   accountStatus: AccountStatus;
   emailVerified: boolean;
+  outstandingMealBalance?: number;
   onboardingDetails?: {
     organizationName?: string;
     propertyLicense?: string;
@@ -65,6 +66,11 @@ const userSchema = new Schema<IUser>(
     emailVerified: {
       type: Boolean,
       default: false,
+    },
+    outstandingMealBalance: {
+      type: Number,
+      default: 0,
+      min: 0,
     },
     onboardingDetails: {
       organizationName: { type: String, default: "" },

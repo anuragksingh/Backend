@@ -1,0 +1,13 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const adminController_1 = require("../controllers/adminController");
+const authenticateUser_1 = require("../middleware/authenticateUser");
+const requireRole_1 = require("../middleware/requireRole");
+const router = (0, express_1.Router)();
+router.use(authenticateUser_1.authenticateUser, (0, requireRole_1.requireRole)("admin"));
+router.get("/pending-owners", adminController_1.getPendingOwners);
+router.patch("/owners/:id/review", adminController_1.reviewOwner);
+router.get("/users", adminController_1.getAllUsers);
+router.get("/metrics", adminController_1.getPlatformMetrics);
+exports.default = router;
