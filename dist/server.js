@@ -15,6 +15,7 @@ const authRoutes_1 = __importDefault(require("./routes/authRoutes"));
 const hostelRoutes_1 = __importDefault(require("./routes/hostelRoutes"));
 const bookingRoutes_1 = __importDefault(require("./routes/bookingRoutes"));
 const mealRoutes_1 = __importDefault(require("./routes/mealRoutes"));
+const mealTokenRoutes_1 = __importDefault(require("./routes/mealTokenRoutes"));
 const adminRoutes_1 = __importDefault(require("./routes/adminRoutes"));
 dotenv_1.default.config();
 const app = (0, express_1.default)();
@@ -61,6 +62,7 @@ app.use("/api/auth", authRoutes_1.default);
 app.use("/api/hostels", hostelRoutes_1.default);
 app.use("/api/bookings", bookingRoutes_1.default);
 app.use("/api/meals", mealRoutes_1.default);
+app.use("/api/meal-tokens", mealTokenRoutes_1.default);
 app.use("/api/admin", adminRoutes_1.default);
 // 7. Central Error Handling Middleware
 app.use(errorHandler_1.errorHandler);

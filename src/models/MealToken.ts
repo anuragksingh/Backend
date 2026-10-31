@@ -59,3 +59,4 @@ const mealTokenSchema = new Schema<IMealToken>(
 mealTokenSchema.index({ residentId: 1, mealDate: 1, mealType: 1 }, { background: true });
 
 export const MealToken = model<IMealToken>("MealToken", mealTokenSchema);
+

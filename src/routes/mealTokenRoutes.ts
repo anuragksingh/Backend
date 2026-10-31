@@ -29,3 +29,4 @@ router.get("/history", authenticateUser, getRedemptionHistory);
 router.get("/:id", authenticateUser, getTokenById);
 
 export default router;
+

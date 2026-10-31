@@ -38,3 +38,4 @@ const mealSchema = new Schema<IMeal>(
 mealSchema.index({ hostelId: 1, dayOfWeek: 1, mealType: 1 }, { unique: true });
 
 export const Meal = model<IMeal>("Meal", mealSchema);
+

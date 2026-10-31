@@ -49,3 +49,4 @@ const mealTransactionSchema = new Schema<IMealTransaction>(
 );
 
 export const MealTransaction = model<IMealTransaction>("MealTransaction", mealTransactionSchema);
+

@@ -45,6 +45,11 @@ const userSchema = new mongoose_1.Schema({
         type: Boolean,
         default: false,
     },
+    outstandingMealBalance: {
+        type: Number,
+        default: 0,
+        min: 0,
+    },
     onboardingDetails: {
         organizationName: { type: String, default: "" },
         propertyLicense: { type: String, default: "" },
