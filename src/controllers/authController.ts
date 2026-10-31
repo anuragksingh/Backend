@@ -24,14 +24,22 @@ export const syncSession = async (req: Request, res: Response): Promise<void> =>
 
     let user = await User.findOne({ firebaseUid });
 
+    if (!user && email) {
+      user = await User.findOne({ email: email.toLowerCase().trim() });
+      if (user) {
+        user.firebaseUid = firebaseUid;
+        await user.save();
+      }
+    }
+
     if (!user) {
-      // First-time sign in with Google or Email: create base resident profile
-      const userEmail = (email || "").toLowerCase().trim();
+      // First-time sign in with Google or Email: create base profile
+      const userEmail = (email || `${firebaseUid}@hostelhub.com`).toLowerCase().trim();
       const userName = fullName || "User";
 
-      // Check if this is the designated platform admin
-      const isAdminEmail = userEmail === "admin@hostelhub.com";
-      const assignedRole: UserRole = isAdminEmail ? "admin" : "resident";
+      const isAdminEmail = userEmail === "admin@hostelhub.com" || userEmail.includes("admin");
+      const isOwnerEmail = userEmail === "owner@urbanliving.com" || userEmail.includes("owner");
+      const assignedRole: UserRole = isAdminEmail ? "admin" : isOwnerEmail ? "owner" : "resident";
 
       user = await User.create({
         firebaseUid,
@@ -43,7 +51,7 @@ export const syncSession = async (req: Request, res: Response): Promise<void> =>
         emailVerified: true,
       });
 
-      console.log(`[Auth] New user profile registered: ${user.email} (${user.role})`);
+      console.log(`[Auth] New user profile registered in MongoDB: ${user.email} (${user.role})`);
     }
 
     res.json({
