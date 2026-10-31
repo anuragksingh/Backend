@@ -38,27 +38,29 @@ const DEFAULT_MEALS = [
 
 export const getTodayMeals = async (req: Request, res: Response): Promise<void> => {
   try {
-    let { hostelId } = req.query;
+    let hostelIdStr = req.query.hostelId as string | undefined;
 
-    if (!hostelId) {
-      // Pick first hostel as default
+    if (!hostelIdStr) {
       const defaultHostel = await Hostel.findOne();
       if (!defaultHostel) {
         res.status(404).json({ success: false, error: "No hostel registered" });
         return;
       }
-      hostelId = defaultHostel._id.toString();
+      hostelIdStr = defaultHostel._id.toString();
     }
 
     const todayDayName = DAYS[new Date().getDay()];
 
-    let meals = await Meal.find({ hostelId, dayOfWeek: todayDayName });
+    let meals: any[] = await Meal.find({
+      hostelId: new Types.ObjectId(hostelIdStr),
+      dayOfWeek: todayDayName,
+    });
 
     // Auto-seed today's meals for this hostel if none exist
     if (!meals.length) {
       const newMeals = DEFAULT_MEALS.map((m) => ({
         ...m,
-        hostelId: new Types.ObjectId(hostelId as string),
+        hostelId: new Types.ObjectId(hostelIdStr),
         dayOfWeek: todayDayName,
       }));
       meals = await Meal.insertMany(newMeals);
@@ -77,11 +79,13 @@ export const getTodayMeals = async (req: Request, res: Response): Promise<void> 
 
 export const getAllMealsForHostel = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { hostelId } = req.params;
-    let meals = await Meal.find({ hostelId }).sort({ dayOfWeek: 1, mealType: 1 });
+    const hostelId = req.params.hostelId as string;
+    let meals: any[] = await Meal.find({ hostelId: new Types.ObjectId(hostelId) }).sort({
+      dayOfWeek: 1,
+      mealType: 1,
+    });
 
     if (!meals.length) {
-      // Seed week of meals
       const weekMeals: any[] = [];
       for (const day of DAYS) {
         for (const tmpl of DEFAULT_MEALS) {

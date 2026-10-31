@@ -11,6 +11,7 @@ import authRoutes from "./routes/authRoutes";
 import hostelRoutes from "./routes/hostelRoutes";
 import bookingRoutes from "./routes/bookingRoutes";
 import mealRoutes from "./routes/mealRoutes";
+import mealTokenRoutes from "./routes/mealTokenRoutes";
 import adminRoutes from "./routes/adminRoutes";
 
 dotenv.config();
@@ -69,6 +70,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/hostels", hostelRoutes);
 app.use("/api/bookings", bookingRoutes);
 app.use("/api/meals", mealRoutes);
+app.use("/api/meal-tokens", mealTokenRoutes);
 app.use("/api/admin", adminRoutes);
 
 // 7. Central Error Handling Middleware

@@ -3,6 +3,9 @@ import { Hostel } from "../models/Hostel";
 import { Room } from "../models/Room";
 import { MealSchedule } from "../models/MealSchedule";
 import { Booking } from "../models/Booking";
+import { Meal } from "../models/Meal";
+import { MealToken } from "../models/MealToken";
+import { MealTransaction } from "../models/MealTransaction";
 
 export const seedDatabase = async () => {
   try {
@@ -271,6 +274,106 @@ export const seedDatabase = async () => {
           },
         ]);
         console.log("[Seed] Resident bookings seeded in MongoDB.");
+      }
+    }
+
+    // 7. Ensure Meal Configurations exist for Hostel
+    if (hostel1) {
+      const mealCount = await Meal.countDocuments({ hostelId: hostel1._id });
+      if (mealCount === 0) {
+        const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+        const mealSeeds: any[] = [];
+        for (const day of days) {
+          mealSeeds.push(
+            {
+              hostelId: hostel1._id,
+              dayOfWeek: day,
+              mealType: "breakfast",
+              name: day === "Sunday" ? "Poori Bhaji, Sprouts Salad & Tea" : "Masala Dosa, Idli-Vada with Sambar & Filter Coffee",
+              price: 50,
+              timings: "07:30 AM - 09:30 AM",
+              isAvailable: true,
+              tokenGenerationDeadline: "09:00 AM",
+              tokenRedemptionDeadline: "09:30 AM",
+            },
+            {
+              hostelId: hostel1._id,
+              dayOfWeek: day,
+              mealType: "lunch",
+              name: "Royal Thali: Dal Tadka, Paneer Butter Masala, Basmati Rice, Phulka Roti & Salad",
+              price: 100,
+              timings: "12:30 PM - 02:30 PM",
+              isAvailable: true,
+              tokenGenerationDeadline: "02:00 PM",
+              tokenRedemptionDeadline: "02:30 PM",
+            },
+            {
+              hostelId: hostel1._id,
+              dayOfWeek: day,
+              mealType: "dinner",
+              name: day === "Friday" ? "Dum Biryani / Shahi Paneer, Raita & Gulab Jamun" : "Dal Makhani, Seasonal Sabzi, Tandoori Roti & Kheer",
+              price: 80,
+              timings: "07:30 PM - 09:30 PM",
+              isAvailable: true,
+              tokenGenerationDeadline: "09:00 PM",
+              tokenRedemptionDeadline: "09:30 PM",
+            }
+          );
+        }
+        await Meal.insertMany(mealSeeds);
+        console.log("[Seed] 21 Meal items (Breakfast/Lunch/Dinner) seeded for hostel.");
+      }
+
+      // 8. Ensure a sample redeemed token & billing transaction for resident
+      if (resident) {
+        const existingToken = await MealToken.findOne({ residentId: resident._id });
+        if (!existingToken) {
+          const pastDate = new Date();
+          pastDate.setDate(pastDate.getDate() - 1);
+          pastDate.setHours(13, 0, 0, 0);
+
+          const sampleToken = await MealToken.create({
+            residentId: resident._id,
+            residentName: resident.fullName,
+            residentEmail: resident.email,
+            hostelId: hostel1._id,
+            hostelName: hostel1.name,
+            mealType: "lunch",
+            mealDate: pastDate,
+            tokenHash: "HH-LU-DEMO100X",
+            priceSnapshot: 100,
+            status: "redeemed",
+            generatedAt: new Date(pastDate.getTime() - 3600000),
+            expiresAt: new Date(pastDate.getTime() + 7200000),
+            redeemedAt: pastDate,
+            redeemedBy: owner?._id,
+          });
+
+          const sampleTx = await MealTransaction.create({
+            residentId: resident._id,
+            residentName: resident.fullName,
+            residentEmail: resident.email,
+            hostelId: hostel1._id,
+            hostelName: hostel1.name,
+            mealTokenId: sampleToken._id,
+            mealType: "lunch",
+            mealDate: pastDate,
+            amount: 100,
+            transactionType: "meal_charge",
+            description: "LUNCH meal served at " + hostel1.name,
+            status: "completed",
+            createdAt: pastDate,
+          });
+
+          sampleToken.transactionId = sampleTx._id as any;
+          await sampleToken.save();
+
+          await User.findByIdAndUpdate(resident._id, {
+            $set: { outstandingMealBalance: 100 },
+          });
+
+          console.log("[Seed] Sample redeemed meal token & ₹100 billing transaction seeded for resident.");
+        }
       }
     }
 
