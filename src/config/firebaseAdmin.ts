@@ -1,19 +1,24 @@
-import * as admin from "firebase-admin";
+import { initializeApp, getApps, getApp, cert, App } from "firebase-admin/app";
+import { getAuth, Auth } from "firebase-admin/auth";
 import dotenv from "dotenv";
 
 dotenv.config();
 
-let isInitialized = false;
+let adminApp: App | undefined;
+let adminAuth: Auth | undefined;
 
 export const initFirebaseAdmin = () => {
-  if (isInitialized) return admin;
+  if (adminApp && adminAuth) {
+    return { app: adminApp, auth: adminAuth };
+  }
 
-  const projectId = process.env.FIREBASE_PROJECT_ID;
-  const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
-  let privateKey = process.env.FIREBASE_PRIVATE_KEY;
+  const clean = (val?: string) => (val ? val.replace(/^["']|["']$/g, "").trim() : "");
+
+  const projectId = clean(process.env.FIREBASE_PROJECT_ID);
+  const clientEmail = clean(process.env.FIREBASE_CLIENT_EMAIL);
+  let privateKey = clean(process.env.FIREBASE_PRIVATE_KEY);
 
   if (privateKey) {
-    // Unescape literal \n if stored in .env string
     privateKey = privateKey.replace(/\\n/g, "\n");
   }
 
@@ -24,16 +29,19 @@ export const initFirebaseAdmin = () => {
   }
 
   try {
-    (admin as any).initializeApp({
-      credential: (admin as any).credential.cert({
-        projectId,
-        clientEmail,
-        privateKey,
-      }),
-    });
-    isInitialized = true;
+    adminApp = !getApps().length
+      ? initializeApp({
+          credential: cert({
+            projectId,
+            clientEmail,
+            privateKey,
+          }),
+        })
+      : getApp();
+
+    adminAuth = getAuth(adminApp);
     console.log(`[Firebase Admin] Authenticated with project: ${projectId}`);
-    return admin;
+    return { app: adminApp, auth: adminAuth };
   } catch (error: any) {
     console.error("[Firebase Admin] Initialization failed:", error.message);
     throw error;
@@ -43,18 +51,16 @@ export const initFirebaseAdmin = () => {
 export const verifyFirebaseToken = async (
   idToken: string
 ): Promise<{ uid: string; email: string; email_verified?: boolean }> => {
-  initFirebaseAdmin();
+  const { auth } = initFirebaseAdmin();
 
   if (!idToken || typeof idToken !== "string") {
     throw new Error("Invalid or empty ID token supplied");
   }
 
-  const decodedToken = await (admin as any).auth().verifyIdToken(idToken);
+  const decodedToken = await auth.verifyIdToken(idToken);
   return {
     uid: decodedToken.uid,
     email: decodedToken.email || "",
     email_verified: decodedToken.email_verified,
   };
 };
-
-export { admin };

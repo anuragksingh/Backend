@@ -22,8 +22,9 @@ const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
 // 1. Security Headers (nevergethacked compliance)
 app.use(
   helmet({
-    contentSecurityPolicy: false, // Enabled on reverse proxy/production
+    contentSecurityPolicy: false,
     crossOriginEmbedderPolicy: false,
+    crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" },
   })
 );
 
